@@ -1,9 +1,9 @@
-package model
+package model;
 
 import java.util.ArrayList;
 
 public class Venda {
-    private Integer id; // Alterado para Integer
+    private Integer id;
     private String data;
     private String cliente;
     private ArrayList<String> itens;
@@ -21,18 +21,15 @@ public class Venda {
         this.valorTotal = valorTotal;
     }
 
+    // Getters e Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
-
     public String getData() { return data; }
     public void setData(String data) { this.data = data; }
-
     public String getCliente() { return cliente; }
     public void setCliente(String cliente) { this.cliente = cliente; }
-
     public ArrayList<String> getItens() { return itens; }
     public void setItens(ArrayList<String> itens) { this.itens = itens; }
-
     public double getValorTotal() { return valorTotal; }
     public void setValorTotal(double valorTotal) { this.valorTotal = valorTotal; }
 
