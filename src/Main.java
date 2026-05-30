@@ -75,7 +75,8 @@ public class Main {
         } while (opcao != 0);
     }
 
-    // --- SUBMENUS ---
+    // AGORA VAI SER OS SUBMENUS //
+    
 
     private static void submenuMedicamentos() {
         int op = -1;
@@ -219,7 +220,7 @@ public class Main {
         }
     }
 
-    // --- MÉTODOS AUXILIARES DE TRATAMENTO DE ENTRADAS ---
+    // METODOS QUE VÃO AJUDAR A GENTE LER INTEIRO OU FLOAT //
 
     private static int lerInteiro() {
         while (true) {
