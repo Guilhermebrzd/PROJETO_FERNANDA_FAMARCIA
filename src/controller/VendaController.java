@@ -1,6 +1,6 @@
-package br.com.farmacia.controller;
+package controller;
 
-import br.com.farmacia.model.Venda;
+import model.Venda;
 import java.util.ArrayList;
 
 public class VendaController {
@@ -82,7 +82,7 @@ public class VendaController {
     private void emitirComprovante(Venda venda) {
         System.out.println("\n========================================");
         System.out.println("          CUPOM FISCAL - FARMÁCIA        ");
-        System.slate.println("========================================");
+        System.out.println("========================================");
         System.out.println("ID da Venda: " + venda.getId());
         System.out.println("Data: " + venda.getData());
         System.out.println("Cliente: " + venda.getCliente());
@@ -115,4 +115,6 @@ public class VendaController {
                 return;
             }
         }
-        System.out.println("Venda com ID " + id
+        System.out.println("Venda com ID " + idVenda + " não encontrada.");
+    }
+}
