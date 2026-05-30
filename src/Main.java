@@ -1,5 +1,4 @@
 import controller.*;
-import model.Funcionario;
 import model.Medicamento;
 import model.Cliente;
 import model.repository.ClienteRepository;
@@ -11,12 +10,10 @@ import java.util.Scanner;
 public class Main {
     private static Scanner scanner = new Scanner(System.in);
     
-    // Instancia os repositórios compartilhados para não perder dados entre as telas
     private static MedicamentoRepository medicamentoRepository = new MedicamentoRepository();
     private static ClienteRepository clienteRepository = new ClienteRepository();
     private static VendaRepository vendaRepository = new VendaRepository();
 
-    // Instancia os controladores
     private static FuncionarioController funcionarioController = new FuncionarioController();
     private static FornecedorController fornecedorController = new FornecedorController();
     private static ClienteController clienteController = new ClienteController(clienteRepository);
@@ -75,9 +72,6 @@ public class Main {
         } while (opcao != 0);
     }
 
-    // AGORA VAI SER OS SUBMENUS //
-    
-
     private static void submenuMedicamentos() {
         int op = -1;
         while (op != 0) {
@@ -102,7 +96,7 @@ public class Main {
 
                 medicamentoController.adicionarMedicamento(nome, lab, preco, qtd, validade);
             } else if (op == 2) {
-                medicamentoController.exexibirEstoque(); // Chama a listagem real
+                medicamentoController.exibirEstoque(); // Método corrigido aqui!
             }
         }
     }
@@ -212,7 +206,6 @@ public class Main {
                 System.out.print("Data da Venda (DD/MM/AAAA): ");
                 String data = scanner.nextLine();
 
-                // Executa a venda abatendo do estoque dinamicamente!
                 vendaController.realizarVenda(data, cliente, nomeMed, qtd);
             } else if (op == 2) {
                 vendaController.listarTodasVendas();
@@ -220,13 +213,10 @@ public class Main {
         }
     }
 
-    // METODOS QUE VÃO AJUDAR A GENTE LER INTEIRO OU FLOAT //
-
     private static int lerInteiro() {
         while (true) {
             try {
-                int valor = Integer.parseInt(scanner.nextLine());
-                return valor;
+                return Integer.parseInt(scanner.nextLine());
             } catch (NumberFormatException e) {
                 System.err.print("Entrada inválida! Digite um número inteiro: ");
             }
@@ -236,25 +226,20 @@ public class Main {
     private static double lerDouble() {
         while (true) {
             try {
-                double valor = Double.parseDouble(scanner.nextLine());
-                return valor;
+                return Double.parseDouble(scanner.nextLine());
             } catch (NumberFormatException e) {
                 System.err.print("Entrada inválida! Digite um valor numérico (ex: 15.90): ");
             }
         }
     }
 
-    // --- CARGA INICIAL (SEED) ---
     private static void carregarDadosIniciais() {
-        // Cadastra o primeiro administrador do sistema
         funcionarioController.adicionarFuncionario("Administrador Geral", "000.000.000-00", "Gerente", "admin", "admin123", "ADMINISTRADOR");
         
-        // Alimenta o estoque com alguns medicamentos iniciais usando o repositório central
         medicamentoRepository.salvar(new Medicamento(null, "Paracetamol", "Medley", 12.50, 50, "12/2027"));
         medicamentoRepository.salvar(new Medicamento(null, "Amoxicilina", "EMS", 45.00, 20, "08/2026"));
         medicamentoRepository.salvar(new Medicamento(null, "Ibuprofeno", "Eurofarma", 18.20, 35, "05/2027"));
 
-        // Alimenta alguns clientes de teste
         clienteRepository.salvar(new Cliente(null, "João Antônio", "111.222.333-44", "83 99999-9999", "joao@email.com"));
     }
 }
