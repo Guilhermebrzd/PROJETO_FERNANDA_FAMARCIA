@@ -1,129 +1,65 @@
-package br.com.farmacia.controller;
+package service;
 
-import br.com.farmacia.model.Venda;
+import model.Venda;
+import model.Medicamento;
+import model.repository.VendaRepository;
+import model.repository.MedicamentoRepository;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class VendaService {
-    private ArrayList<Venda> listaVendas = new ArrayList<>();
-    private ArrayList<String> estoqueNomes = new ArrayList<>();
-    private ArrayList<Integer> estoqueQuantidades = new ArrayList<>();
-    private ArrayList<Double> estoquePrecos = new ArrayList<>();
+    private VendaRepository vendaRepository;
+    private MedicamentoRepository medicamentoRepository;
 
-    public VendaService() {
-        estoqueNomes.add("Paracetamol");
-        estoqueQuantidades.add(50);
-        estoquePrecos.add(12.50);
-
-        estoqueNomes.add("Amoxicilina");
-        estoqueQuantidades.add(20);
-        estoquePrecos.add(45.00);
-
-        estoqueNomes.add("Ibuprofeno");
-        estoqueQuantidades.add(35);
-        estoquePrecos.add(18.20);
+    // Recebe os repositórios criados no sistema para garantir consistência de dados
+    public VendaService(VendaRepository vendaRepository, MedicamentoRepository medicamentoRepository) {
+        this.vendaRepository = vendaRepository;
+        this.medicamentoRepository = medicamentoRepository;
     }
 
-    public void exibirEstoque() {
-        System.out.println("\n--- RELATÓRIO DE ESTOQUE ATUAL ---");
-        for (int i = 0; i < estoqueNomes.size(); i++) {
-            System.out.println("Medicamento: " + estoqueNomes.get(i) +
-                    " | Qtd: " + estoqueQuantidades.get(i) +
-                    " | Preço Unitário: R$ " + estoquePrecos.get(i));
-        }
-    }
-
-    public void atualizarEstoque(String nome, int quantidade) {
-        boolean encontrado = false;
-        for (int i = 0; i < estoqueNomes.size(); i++) {
-            if (estoqueNomes.get(i).equalsIgnoreCase(nome)) {
-                estoqueQuantidades.set(i, quantidade);
-                encontrado = true;
-                break;
-            }
-        }
-        if (!encontrado) {
-            System.out.println("Medicamento não localizado no estoque.");
-        }
-    }
-
-    public void realizarVenda(int idVenda, String data, String cliente, String nomeMedicamento, int quantidadeDesejada) {
-        int indiceMedicamento = -1;
-        for (int i = 0; i < estoqueNomes.size(); i++) {
-            if (estoqueNomes.get(i).equalsIgnoreCase(nomeMedicamento)) {
-                indiceMedicamento = i;
-                break;
-            }
+    public Venda realizarVenda(String data, String cliente, String nomeMedicamento, int quantidadeDesejada) throws IllegalArgumentException {
+        // 1. Busca o medicamento real no repositório de medicamentos
+        Optional<Medicamento> medOpt = medicamentoRepository.buscarPorNome(nomeMedicamento);
+        
+        if (!medOpt.isPresent()) {
+            throw new IllegalArgumentException("Erro: Medicamento '" + nomeMedicamento + "' não encontrado no estoque.");
         }
 
-        if (indiceMedicamento == -1) {
-            System.out.println("Erro: Medicamento não encontrado no estoque.");
-            return;
+        Medicamento medicamento = medOpt.get();
+
+        // 2. Verifica se tem estoque suficiente
+        if (medicamento.getQuantidadeEstoque() < quantidadeDesejada) {
+            throw new IllegalArgumentException("Erro: Estoque insuficiente! Temos apenas " + medicamento.getQuantidadeEstoque() + " unidades de " + medicamento.getNome() + ".");
         }
 
-        int qtdAtual = estoqueQuantidades.get(indiceMedicamento);
-        if (qtdAtual < quantidadeDesejada) {
-            System.out.println("Erro: Estoque insuficiente! Temos apenas " + qtdAtual + " unidades.");
-            return;
-        }
+        // 3. Atualiza o estoque do medicamento dando baixa
+        medicamento.setQuantidadeEstoque(medicamento.getQuantidadeEstoque() - quantidadeDesejada);
+        medicamentoRepository.salvar(medicamento);
 
-        estoqueQuantidades.set(indiceMedicamento, qtdAtual - quantidadeDesejada);
-        double valorTotal = estoquePrecos.get(indiceMedicamento) * quantidadeDesejada;
+        // 4. Calcula o valor total dinamicamente com base no preço do modelo
+        double valorTotal = medicamento.getPreco() * quantidadeDesejada;
 
         ArrayList<String> itensVenda = new ArrayList<>();
-        itensVenda.add(nomeMedicamento + " (x" + quantidadeDesejada + ")");
+        itensVenda.add(medicamento.getNome() + " (x" + quantidadeDesejada + ") - R$ " + medicamento.getPreco() + " cada");
 
-        Venda novaVenda = new Venda(idVenda, data, cliente, itensVenda, valorTotal);
-        listaVendas.add(novaVenda);
+        // 5. Instancia a venda (ID será gerado pelo contador do Repository)
+        Venda novaVenda = new Venda(null, data, cliente, itensVenda, valorTotal);
+        vendaRepository.salvar(novaVenda);
 
-        System.out.println("\nVenda realizada com sucesso!");
-        emitirComprovante(novaVenda);
+        return novaVenda;
     }
 
-    private void emitirComprovante(Venda venda) {
-        System.out.println("\n========================================");
-        System.out.println("          CUPOM FISCAL - FARMÁCIA        ");
-        System.out.println("========================================");
-        System.out.println("ID da Venda: " + venda.getId());
-        System.out.println("Data: " + venda.getData());
-        System.out.println("Cliente: " + venda.getCliente());
-        System.out.println("----------------------------------------");
-        System.out.println("Itens vendidos:");
-        for (String item : venda.getItens()) {
-            System.out.println("- " + item);
-        }
-        System.out.println("----------------------------------------");
-        System.out.println("TOTAL A PAGAR: R$ " + venda.getValorTotal());
-        System.out.println("========================================");
+    public List<Venda> listarTodasVendas() {
+        return vendaRepository.listarTodos();
     }
 
-    public void listarTodasVendas() {
-        System.out.println("\n--- LISTAGEM DE HISTÓRICO DE VENDAS ---");
-        if (listaVendas.isEmpty()) {
-            System.out.println("Nenhuma venda realizada até o momento.");
-            return;
+    public void cancelarVenda(int idVenda) throws IllegalArgumentException {
+        Optional<Venda> vendaOpt = vendaRepository.buscarPorId(idVenda);
+        if (vendaOpt.isPresent()) {
+            vendaRepository.deletar(idVenda);
+        } else {
+            throw new IllegalArgumentException("Venda com ID " + idVenda + " não encontrada.");
         }
-        for (Venda v : listaVendas) {
-            System.out.println(v);
-        }
-    }
-
-    public void cancelarVenda(int idVenda) {
-        for (int i = 0; i < listaVendas.size(); i++) {
-            if (listaVendas.get(i).getId() == idVenda) {
-                listaVendas.remove(i);
-                System.out.println("Venda " + idVenda + " cancelada e excluída com sucesso.");
-                return;
-            }
-        }
-        System.out.println("Venda com ID " + idVenda + " não encontrada.");
-    }
-
-    public void exibirRelatorioLucro() {
-        double lucroTotal = 0;
-        for (Venda v : listaVendas) {
-            lucroTotal += v.getValorTotal();
-        }
-        System.out.println("\n--- RELATÓRIO DE FATURAMENTO / LUCRO MENSAL ---");
-        System.out.println("Total faturado no mês corrente: R$ " + lucroTotal);
     }
 }
