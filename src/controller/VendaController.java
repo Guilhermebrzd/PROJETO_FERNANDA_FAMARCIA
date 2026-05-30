@@ -1,82 +1,27 @@
 package controller;
 
 import model.Venda;
-import java.util.ArrayList;
+import model.repository.MedicamentoRepository;
+import model.repository.VendaRepository;
+import service.VendaService;
+import java.util.List;
 
 public class VendaController {
-    private ArrayList<Venda> listaVendas = new ArrayList<>();
-    private ArrayList<String> estoqueNomes = new ArrayList<>();
-    private ArrayList<Integer> estoqueQuantidades = new ArrayList<>();
-    private ArrayList<Double> estoquePrecos = new ArrayList<>();
+    private VendaService service;
 
-    public VendaController() {
-        estoqueNomes.add("Paracetamol");
-        estoqueQuantidades.add(50);
-        estoquePrecos.add(12.50);
-
-        estoqueNomes.add("Amoxicilina");
-        estoqueQuantidades.add(20);
-        estoquePrecos.add(45.00);
-
-        estoqueNomes.add("Ibuprofeno");
-        estoqueQuantidades.add(35);
-        estoquePrecos.add(18.20);
+    // O controlador recebe os mesmos repositórios compartilhados do Main
+    public VendaController(VendaRepository vendaRepository, MedicamentoRepository medicamentoRepository) {
+        this.service = new VendaService(vendaRepository, medicamentoRepository);
     }
 
-    public void exibirEstoque() {
-        System.out.println("\n--- RELATÓRIO DE ESTOQUE ATUAL ---");
-        for (int i = 0; i < estoqueNomes.size(); i++) {
-            System.out.println("Medicamento: " + estoqueNomes.get(i) +
-                    " | Qtd: " + estoqueQuantidades.get(i) +
-                    " | Preço Unitário: R$ " + estoquePrecos.get(i));
+    public void realizarVenda(String data, String cliente, String nomeMedicamento, int quantidadeDesejada) {
+        try {
+            Venda vendaRealizada = service.realizarVenda(data, cliente, nomeMedicamento, quantidadeDesejada);
+            System.out.println("\nVenda realizada com sucesso!");
+            emitirComprovante(vendaRealizada);
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
         }
-    }
-
-    public void atualizarEstoque(String nome, int quantidade) {
-        boolean encontrado = false;
-        for (int i = 0; i < estoqueNomes.size(); i++) {
-            if (estoqueNomes.get(i).equalsIgnoreCase(nome)) {
-                estoqueQuantidades.set(i, quantidade);
-                encontrado = true;
-                break;
-            }
-        }
-        if (!encontrado) {
-            System.out.println("Medicamento não localizado no estoque.");
-        }
-    }
-
-    public void realizarVenda(int idVenda, String data, String cliente, String nomeMedicamento, int quantidadeDesejada) {
-        int indiceMedicamento = -1;
-        for (int i = 0; i < estoqueNomes.size(); i++) {
-            if (estoqueNomes.get(i).equalsIgnoreCase(nomeMedicamento)) {
-                indiceMedicamento = i;
-                break;
-            }
-        }
-
-        if (indiceMedicamento == -1) {
-            System.out.println("Erro: Medicamento não encontrado no estoque.");
-            return;
-        }
-
-        int qtdAtual = estoqueQuantidades.get(indiceMedicamento);
-        if (qtdAtual < quantidadeDesejada) {
-            System.out.println("Erro: Estoque insuficiente! Temos apenas " + qtdAtual + " unidades.");
-            return;
-        }
-
-        estoqueQuantidades.set(indiceMedicamento, qtdAtual - quantidadeDesejada);
-        double valorTotal = estoquePrecos.get(indiceMedicamento) * quantidadeDesejada;
-
-        ArrayList<String> itensVenda = new ArrayList<>();
-        itensVenda.add(nomeMedicamento + " (x" + quantidadeDesejada + ")");
-
-        Venda novaVenda = new Venda(idVenda, data, cliente, itensVenda, valorTotal);
-        listaVendas.add(novaVenda);
-
-        System.out.println("\nVenda realizada com sucesso!");
-        emitirComprovante(novaVenda);
     }
 
     private void emitirComprovante(Venda venda) {
@@ -98,23 +43,22 @@ public class VendaController {
 
     public void listarTodasVendas() {
         System.out.println("\n--- LISTAGEM DE HISTÓRICO DE VENDAS ---");
-        if (listaVendas.isEmpty()) {
+        List<Venda> lista = service.listarTodasVendas();
+        if (lista.isEmpty()) {
             System.out.println("Nenhuma venda realizada até o momento.");
             return;
         }
-        for (Venda v : listaVendas) {
+        for (Venda v : lista) {
             System.out.println(v);
         }
     }
 
     public void cancelarVenda(int idVenda) {
-        for (int i = 0; i < listaVendas.size(); i++) {
-            if (listaVendas.get(i).getId() == idVenda) {
-                listaVendas.remove(i);
-                System.out.println("Venda " + idVenda + " cancelada e excluída com sucesso.");
-                return;
-            }
+        try {
+            service.cancelarVenda(idVenda);
+            System.out.println("Venda " + idVenda + " cancelada e excluída com sucesso.");
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
         }
-        System.out.println("Venda com ID " + idVenda + " não encontrada.");
     }
 }
