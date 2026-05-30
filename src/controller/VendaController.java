@@ -9,7 +9,7 @@ import java.util.List;
 public class VendaController {
     private VendaService service;
 
-    // O controlador recebe os mesmos repositórios compartilhados do Main
+    // CONSTRUTOR QUE RESOLVE O ERRO DA LINHA 24 DA MAIN
     public VendaController(VendaRepository vendaRepository, MedicamentoRepository medicamentoRepository) {
         this.service = new VendaService(vendaRepository, medicamentoRepository);
     }
