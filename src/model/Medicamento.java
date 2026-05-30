@@ -1,7 +1,7 @@
 package model;
 
 public class Medicamento {
-    private Integer id; // Alterado para Integer para aceitar null
+    private Integer id;
     private String nome;
     private String laboratorio;
     private double preco;
@@ -17,22 +17,17 @@ public class Medicamento {
         this.validade = validade;
     }
 
-    // Getters e Setters adicionados
+    // Getters e Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
-
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
-
     public String getLaboratorio() { return laboratorio; }
     public void setLaboratorio(String laboratorio) { this.laboratorio = laboratorio; }
-
     public double getPreco() { return preco; }
     public void setPreco(double preco) { this.preco = preco; }
-
     public int getQuantidadeEstoque() { return quantidadeEstoque; }
     public void setQuantidadeEstoque(int quantidadeEstoque) { this.quantidadeEstoque = quantidadeEstoque; }
-
     public String getValidade() { return validade; }
     public void setValidade(String validade) { this.validade = validade; }
 }
